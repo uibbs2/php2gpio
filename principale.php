@@ -1,39 +1,31 @@
-<?php (include 'config.php') or die("<h1>Configurazione non trovata</h1>");  # Modificare config!
-#	$inizio = microtime(true);	# cronometra durata
-/*************************************************************************
- *****                                                               *****
- ***** NESSUNA MODIFICA NECESSARIA OLTRE QUESTO PUNTO                *****
- *****                                                               *****
- *************************************************************************/
-
-##
-## Procedure principali
+<?php (include 'config.php') or die("<h1>Configuration not found!</h1>");
+#$inizio = microtime(true);		# DEBUG: measure execution time
+#######################################################################
+## main functions
 ##
 
 function pulsante($linea) {
-# Attiva una linea relè come pulsante (accende, spegne dopo $interpasso microsec)
-  global $accendi,$spegni,$interpasso;
-  exec("$accendi $linea");
-  usleep($interpasso);
-  exec("$spegni $linea");
+# Activate a relais as momentary
+	global $accendi,$spegni,$interpasso;
+	exec("$accendi $linea");	# turn on
+	usleep($interpasso);		# wait
+	exec("$spegni $linea");		# turn off
 } #/pulsante
 
 
-
 /*************************************************************************
+ * RIGHT NOW WE HAVE JUST THIS
  *************************************************************************/
 
-# Se è stato inviato via form il numero di un rele, cambia il suo stato
-if ( $_POST['quale'] != "" ) {
-   pulsante($_POST['quale']);    # per ora solo pulsante
+## has been requested a change via Post? Operate it!
+if ($_POST['quale'] != ""){
+	pulsante($_POST['quale']);    # per ora solo pulsante
 } #endif.quale
 
-# Se la richiesta è arrivata in ajax, muore con sola risposta json, se no crea il form html
-if ( $_POST['risorsa'] == "ajax" ) {
-  die(json_encode(array("success"=>1, $_POST)));
-}
+## has been request made via ajax? Stop here
+if ($_POST['risorsa'] == "ajax") die(json_encode(array("success"=>1,$_POST)));
 
-# Altrimenti, costruisce il documento html
+# Otherwise, give a HTML5 interface
 ?><!doctype html>
 <html lang="it">
 <head>
@@ -49,15 +41,14 @@ if ( $_POST['risorsa'] == "ajax" ) {
 <body>
 	<div class="container">
 		<div class="page-header">
-			<h1 class="display-4">Casa di Marco</h1><?php /*
+			<h1 class="display-4">Pulsanti</h1><?php /*
 			<p class="lead">Controllo rele via raspberry</p> */ ?>
 		</div><!-- /div.page-header -->
 
 		<form id="principale" class="comandi" action="principale.php" method="post">
-
-			<table class="table table-sm"><!-- Bottoni in table -->
+			<table class="table table-sm">
 				<thead>
-					<tr><!-- Descrizione delle tre colonne -->
+					<tr><!-- Descriptions, should come from PHP itself -->
 						<th scope="col">Sopra</th>
 						<th scope="col">Sotto</th>
 						<th scope="col">Giardino</th>
@@ -65,20 +56,20 @@ if ( $_POST['risorsa'] == "ajax" ) {
 				</thead>
 				<tbody>
 					<tr>
-						<td><!-- prima colonna: sopra -->
-<?php foreach ($quali1 as $key => $value) : ?>
-							<p><button type="submit" name="quale" value="<?php echo $key; ?>" class="btn btn-secondary btn-sm"><?php echo $value[0]; ?></button></p>
-<?php endforeach; ?>
+						<td><!-- First column -->
+<?php foreach ($quali1 as $key => $value): ?>
+							<p><button type="submit" name="quale" value="<?php echo $key ?>" class="btn btn-secondary btn-sm"><?php echo $value[0] ?></button></p>
+<?php endforeach ?>
 						</td>
-						<td><!-- seconda colonna: sotto -->
-<?php foreach ($quali2 as $key => $value) : ?>
-							<p><button type="submit" name="quale" value="<?php echo $key; ?>" class="btn btn-secondary btn-sm"><?php echo $value[0]; ?></button></p>
-<?php endforeach; ?>
+						<td><!-- Second column -->
+<?php foreach ($quali2 as $key => $value): ?>
+							<p><button type="submit" name="quale" value="<?php echo $key ?>" class="btn btn-secondary btn-sm"><?php echo $value[0] ?></button></p>
+<?php endforeach ?>
 						</td>
 						<td><!-- Terza colonna: esterno -->
-<?php foreach ($quali3 as $key => $value) : ?>
-							<p><button type="submit" name="quale" value="<?php echo $key; ?>" class="btn btn-secondary btn-sm"><?php echo $value[0]; ?></button></p>
-<?php endforeach; ?>
+<?php foreach ($quali3 as $key => $value): ?>
+							<p><button type="submit" name="quale" value="<?php echo $key ?>" class="btn btn-secondary btn-sm"><?php echo $value[0] ?></button></p>
+<?php endforeach ?>
 						</td>
 					</tr>
 				</tbody>
@@ -86,12 +77,12 @@ if ( $_POST['risorsa'] == "ajax" ) {
 		</form><!-- /form.principale -->
 	</div><!-- /container -->
 
-	<!-- Funzionalità Javascript: obbligo primo jQuery, poi Popper, infine Bootstrap -->
+	<!-- Javascript: first primo jQuery, then Popper, finally Bootstrap -->
 	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
 	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
 
-	<!-- Javascript locale -->
+	<!-- local javascript -->
 	<script>
 
 		$(document).ready(function(){
@@ -117,4 +108,4 @@ if ( $_POST['risorsa'] == "ajax" ) {
 </body>
 </html>
 <?php
-#	$fine = microtime(true);	$time = $fine - $inizio;	print $time;	# durata
+#$fine = microtime(true);$time = $fine - $inizio;print $time;	# durata

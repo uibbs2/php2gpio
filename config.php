@@ -1,76 +1,71 @@
-<?php if(count(get_included_files()) ==1) exit("<h1>Impossibile accedere</h1>"); # Impedisce accesso diretto
+<?php if(count(get_included_files()) ==1) die("<h1>You can't access directly</h1>");
 /*************************************************************************
  **                                                                     **
- ** CONFIGURAZIONE DEL SISTEMA - Verificare attentamente quest'area     **
+ ** SYSTEM CONFIGURATION - Kindly verify values in this area            **
  **                                                                     **
  *************************************************************************/
 
-  # Banchi di rele
-  # per ognuno abbiamo un array che comprende ID=>(Etichetta,Pulsante)
-  # se lo stato Pulsante è True sarà attivato per un delay e disattivato
-  #  altrimenti è un interruttore e sarà commutato
-  ##### PER ORA SONO TUTTI PULSANTI
-  $quali1 = [
-    2 => [ "Terrazza", TRUE],
-    3 => [ "Bagno", TRUE],
-    4 => [ "Camera", TRUE],
-	17 => [ "Armadio", TRUE],
-    27 => [ "Corridoio", TRUE],
-    22 => [ "Veranda", TRUE],
-    10 => [ "Balcone", TRUE],
-    9 => [ "Cameretta", TRUE],
+## Relais settings: three banks of eight relais
+# each is an array of ID => [ "name", is_momentary ]
+# ID is the GPIO channel unique ID
+# "name" is just the identification of the single relay
+# is_momentary is TRUE if operation is "turn on, wait, turn off"
+#                 FALSE if operation "turn on" or "turn off"
+##### RIGHT NOW ALL ARE MOMENTARY
+$quali1 = [		# First bank
+	2 => [ "Terrace", TRUE],
+	3 => [ "Bathroom", TRUE],
+	4 => [ "Master BR", TRUE],
+	17 => [ "Closet", TRUE],
+	27 => [ "Hallway", TRUE],
+	22 => [ "Porch", TRUE],
+	10 => [ "Balcony", TRUE],
+	9 => [ "Kids BR", TRUE],
   ];
 
-  $quali2 = [
-    11 => [ "Bagno", TRUE],
-    5 => [ "Lavanderia", TRUE],
-    6 => [ "Cucina", TRUE],
-	13 => [ "Salone", TRUE],
-    19 => [ "Sottoscala", TRUE],
-    26 => [ "Porta", TRUE],
-    21 => [ "Scala", TRUE],
-    20 => [ "Ripostiglio", TRUE],
-  ];
+$quali2 = [		# Second bank
+	11 => [ "2nd Bath", TRUE],
+	5 => [ "Launderette", TRUE],
+	6 => [ "Kitchen", TRUE],
+	13 => [ "Living", TRUE],
+	19 => [ "Under stairs", TRUE],
+	26 => [ "Entrance door", TRUE],
+	21 => [ "Stairs", TRUE],
+	20 => [ "Pantry", TRUE],
+];
 
 
-  $quali3 = [
-	# terzo banco: da uno a otto
+$quali3 = [		# third bank
 	12 => [ "Patio", TRUE],
-    16 => [ "Cancelletto", TRUE],
-    7 => [ "Prato", TRUE],
-    8 => [ "Piscina", TRUE],
-    25 => [ "Orto", TRUE],
-    24 => [ "Idromassaggi", TRUE],
+    16 => [ "Gate", TRUE],
+    7 => [ "Lawn", TRUE],
+    8 => [ "Pool", TRUE],
+    25 => [ "Garden", TRUE],
+    24 => [ "Crypt", TRUE],
     23 => [ "Gazebo", TRUE],
-    18 => [ "Tombe", TRUE],
+    18 => [ "Tombs", TRUE],
   ];
 
 /*************************************************************************
  *****                                                               *****
- ***** OLTRE QUESTO PUNTO SOLO MODIFICHE FACOLTATIVE E SE NECESSARIE *****
+ ***** FROM THIS POINT ONLY MINOR MODIFICATIONS - OR LEAVE THEM      *****
  *****                                                               *****
  *************************************************************************/
 
-  # Variabili ad uso locale
-  $interpasso = 200000;		# (uSec) per quanto lasciare acceso il relè pulsante
+# External pilots: them have to be executable
+# for Raspbian each will be "sudo /path/to/bin/command.py"
+$accendi	= "/home/www/bin/turnon.py";		# Turn ON
+$spegni		= "/home/www/bin/turnoff.py";		# Turn OFF
+$commuta	= "/home/www/bin/switch.py";		# Invert state
+$stato		= "/home/www/bin/status.py";		# Read state
 
-  # Pilotaggio rele: verificare il percorso e che siano eseguibili!
-  $accendi	= "/home/www/bin/turnon.py";		# comando di accensione rele
-  $spegni	= "/home/www/bin/turnoff.py";		# comando di spegnimento rele
-  $commuta	= "/home/www/bin/switch.py";		# comando per commutare rele
-  $stato	= "/home/www/bin/status.py";		# comando lettura stato rele
+# some local vars
+$interpasso	=	200000;		# (uSec) momentary pause between on and off
 
-/*************************************************************************
- *****                                                               *****
- ***** NESSUNA MODIFICA NECESSARIA OLTRE QUESTO PUNTO                *****
- *****                                                               *****
- *************************************************************************/
+/* # Excluded at the moment
 
-
-  # Cambia il colore del bottone in base allo stato del rele
-/*  $modalita = [
-    0 => "danger",
-    1 => "secondary",
-  ];
+$modalita = [		# button class for switches, different for ON and OFF
+	0 => "danger",
+	1 => "secondary",
+];
 */
-
