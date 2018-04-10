@@ -13,3 +13,11 @@ into config.php for it to works, also you should add the www users into
 /etc/sudoers with NOPASS request, in order to pilot GPIO pins as www user
 
 I've tried it under ubuntu-mate for Raspberry with no big problems
+
+It includes bin/programma.py : an utility to program a sequence of ONs and OFFs
+like a safety system simulating people inside the house (a la Home Alone
+flavour)
+Are included two example programs: DefPrg which is default, and NewPrg which is
+a more complex one
+programma.py operates ALL relays in a single flavour: either all momentary or
+all on-off
