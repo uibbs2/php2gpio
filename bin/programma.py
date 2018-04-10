@@ -1,14 +1,13 @@
 #!/usr/bin/python
 #####################################################################
-##### CONFIGURAZIONE DEL SISTEMA
-# elenco delle porte GPIO a cui sono collegati i rele
-porte = (
-	 2,  3,  4, 17, 27, 22, 10,  9,		# primo banco: da uno a otto
-	11,  5,  6, 13, 19, 26, 21, 20,		# secondo banco: da uno a otto
-	12, 16,  7,  8, 25, 24, 23, 18,		# terzo banco: da uno a otto
+##### CONFIGURATION
+porte = (		# list of GPIO ports connected to a relay bank
+	 2,  3,  4, 17, 27, 22, 10,  9,		# first bank
+	11,  5,  6, 13, 19, 26, 21, 20,		# second
+	12, 16,  7,  8, 25, 24, 23, 18,		# third
 )
 
-corrispondenza = [
+corrispondenza = [		# Name of the item connected to each relay
 	'(nulla)','',
 	'Terrazza',	'Bagno',	'Camera',	'Lavanderia',	'Cucina',	'Prato',
 	'Piscina',	'Cameretta',	'Balcone',	'Bagno',	'Patio',	'Salone',
@@ -18,13 +17,13 @@ corrispondenza = [
 	'Corridoio',
 ]
 
-# pausa fra l'azione su una porta e la successiva
+# pause between on and off in momentary operation
 interpasso = 0.25
 
-# pausa fra gli stati
+# pause between status
 attesa = 1
 
-##### FINE CONFIGURAZIONE
+##### END CONFIGURATION
 #####################################################################
 import RPi.GPIO as GPIO
 import sys
@@ -33,67 +32,71 @@ from time import sleep
 GPIO.setwarnings(False)
 GPIO.setmode(GPIO.BCM)
 
+# Prepare each port to receive commands
 for porta in porte:
 	GPIO.setup(porta, GPIO.OUT)
+
 #####################################################################
 def accendi(quale):
-	"Accende un rele, se questo non e' gia' acceso"
-	attuale = GPIO.input(quale)		# stato del rele?
+	"Turn on a relay, if not on already"
+	attuale = GPIO.input(quale)		# status?
 	if attuale:
-		GPIO.output(quale,0)		# acceso: spegnilo
+		GPIO.output(quale,0)		# off: switch it on
 	return
 
 def spegni(quale):
-	"Spegne un rele, se questo non e' gia' spento"
-	attuale = GPIO.input(quale)		# stato del rele?
+	"Turn off a realy, if not off already"
+	attuale = GPIO.input(quale)		# status?
 	if not attuale:
-		GPIO.output(quale,1)		# spento: accendilo
+		GPIO.output(quale,1)		# on: switch it off
 	return
 
 #####################################################################
 def pulsante(quale):
-	"Effettua procedura pulsante: accendi i rele richiesti e spegnili dopo $interpasso secondi"
-	if quale in porte :
+	"Momentary switch: operates a relay on, then off after $interpasso usec"
+	# if quale is not a valid port, will just return
+	if quale in porte:
 		accendi(quale)
-	sleep(interpasso)
-	if quale in porte :
+		sleep(interpasso)
 		spegni(quale)
-	sleep(interpasso/2)		# Per forzare il cambio di stato del rele
+		sleep(interpasso/2)		# forced to wait for status change
 	return
 
 def commuta(quale):
-	"Cambia lo stato di un rele, quando sono interruttori"
-	attuale = GPIO.input(quale)
-	nuovo = not attuale
-	GPIO.output(quale,nuovo)
-	sleep(interpasso)
+	"Change relay status from on to off or viceversa"
+	# if quale is not a valid port, will just return
+	if quale in porte:
+		attuale = GPIO.input(quale)
+		nuovo = not attuale
+		GPIO.output(quale,nuovo)
+		sleep(interpasso/2)		# forced to wait for status acknowledge
 	return
 
 #####################################################################
 ##### main
 
-## obbligatorio indicare azione dei rele
+## action is mandatory
 if len(sys.argv)>1:
 	cosafare = sys.argv[1]
-	if cosafare == "c":
+	if cosafare == "c":		# Switch
 		print "Commutazione di stato (interruttori)"
-	elif cosafare == "p":
+	elif cosafare == "p":	# Momentary
 		print "Accensione temporanea (pulsanti)"
-	else:
+	else:					# Unknown command
 		print "INDICARE c per commuta oppure p per pulsa"
 		sys.exit(255)
-else:
+else:	# no command at all
 	print "INDICARE OBBLIGATORIAMENTE c per commuta oppure p per pulsa"
 	sys.exit(255)
 
-## facoltativo indicare il percorso del programma
-if len(sys.argv)>2:		# Indicato come secondo parametro il file
+## program file is optional (AFTER p or c), otherwise will assume DefPrg.py
+if len(sys.argv)>2:
 	qualeprogramma = sys.argv[2]
 	print ("Programma usato: %s" % (qualeprogramma))
 else:					# Non indicato, assumi quello di default
 	qualeprogramma = "DefPrg"
 
-# Prova a leggere il programma, o fallisce
+## if program not exists, dies
 try:
 	prg = __import__(qualeprogramma)
 except ImportError as error:
@@ -101,15 +104,16 @@ except ImportError as error:
 	sys.exit(255)
 
 # prepara il programma assiemando gli array
-print prg.programma
+print prg.programma		# debug
 
+# main foreach cicle
 for rele,pausa in prg.programma:
 	print ("Tocco %s, poi attendo %d" % (corrispondenza[rele], pausa))
 	if cosafare == "p":
 		pulsante(rele)
 	elif cosafare == "c":
 		commuta(rele)
-
+	# pause is always passed, so "(0,xxx)," will just pause for xxx usec
 	if pausa>0:
 		sleep(pausa)
 
