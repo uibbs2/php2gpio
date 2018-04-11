@@ -23,6 +23,9 @@ interpasso = 0.25
 # pause between status
 attesa = 1
 
+# DEBUG: write informations
+traccia = True
+
 ##### END CONFIGURATION
 #####################################################################
 import RPi.GPIO as GPIO
@@ -50,7 +53,6 @@ def spegni(quale):
 	if not attuale:
 		GPIO.output(quale,1)		# on: switch it off
 	return
-
 #####################################################################
 def pulsante(quale):
 	"Momentary switch: operates a relay on, then off after $interpasso usec"
@@ -71,7 +73,11 @@ def commuta(quale):
 		GPIO.output(quale,nuovo)
 		sleep(interpasso/2)		# forced to wait for status acknowledge
 	return
-
+#####################################################################
+def dprint(messaggio):		# print a message if debug is true
+	if traccia:
+		print messaggio
+	return
 #####################################################################
 ##### main
 
@@ -79,9 +85,9 @@ def commuta(quale):
 if len(sys.argv)>1:
 	cosafare = sys.argv[1]
 	if cosafare == "c":		# Switch
-		print "Commutazione di stato (interruttori)"
+		dprint("Commutazione di stato (interruttori)")
 	elif cosafare == "p":	# Momentary
-		print "Accensione temporanea (pulsanti)"
+		dprint("Accensione temporanea (pulsanti)")
 	else:					# Unknown command
 		print "INDICARE c per commuta oppure p per pulsa"
 		sys.exit(255)
@@ -92,9 +98,9 @@ else:	# no command at all
 ## program file is optional (AFTER p or c), otherwise will assume DefPrg.py
 if len(sys.argv)>2:
 	qualeprogramma = sys.argv[2]
-	print ("Programma usato: %s" % (qualeprogramma))
 else:					# Non indicato, assumi quello di default
 	qualeprogramma = "DefPrg"
+dprint("Programma usato: %s" % (qualeprogramma))
 
 ## if program not exists, dies
 try:
@@ -104,11 +110,15 @@ except ImportError as error:
 	sys.exit(255)
 
 # prepara il programma assiemando gli array
-print prg.programma		# debug
+dprint(prg.programma)		# debug
+dprint(len(prg.programma))	# debug: size?
 
+i = 0	# counter of instructions
+j = len(prg.programma)		# total number of instructions
 # main foreach cicle
 for rele,pausa in prg.programma:
-	print ("Tocco %s, poi attendo %d" % (corrispondenza[rele], pausa))
+	i += 1		# doing instruction X
+	dprint("%d di %d: Tocco %s, poi attendo %d" % (i,j,corrispondenza[rele], pausa))
 	if cosafare == "p":
 		pulsante(rele)
 	elif cosafare == "c":
