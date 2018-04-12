@@ -5,46 +5,51 @@
  **                                                                     **
  *************************************************************************/
 
+$pagina_titolo = "Controllo pulsanti";				# H1 header
+#$pagina_subtit = "Controllo rele via raspberry";	# lead paragraph
+$pagina_subtit = FALSE;	# lead paragraph disabled
+
 ## Relais settings: three banks of eight relais
-# each is an array of ID => [ "name", is_momentary ]
-# ID is the GPIO channel unique ID
-# "name" is just the identification of the single relay
-# is_momentary is TRUE if operation is "turn on, wait, turn off"
+# each is an array of banks, in the form "Title" => array(bank)
+#  each title will appear on the top of the button columns
+# each bank is an array of port => [ is_momentary, "name" ]
+#  port is the GPIO channel unique ID
+#  "name" is just the identification of the single relay
+#  is_momentary is TRUE if operation is "turn on, wait, turn off"
 #                 FALSE if operation "turn on" or "turn off"
-##### RIGHT NOW ALL ARE MOMENTARY
-$quali1 = [		# First bank
-	2 => [ "Terrace", TRUE],
-	3 => [ "Bathroom", TRUE],
-	4 => [ "Master BR", TRUE],
-	17 => [ "Closet", TRUE],
-	27 => [ "Hallway", TRUE],
-	22 => [ "Porch", TRUE],
-	10 => [ "Balcony", TRUE],
-	9 => [ "Kids BR", TRUE],
-  ];
 
-$quali2 = [		# Second bank
-	11 => [ "2nd Bath", TRUE],
-	5 => [ "Launderette", TRUE],
-	6 => [ "Kitchen", TRUE],
-	13 => [ "Living", TRUE],
-	19 => [ "Under stairs", TRUE],
-	26 => [ "Entrance door", TRUE],
-	21 => [ "Stairs", TRUE],
-	20 => [ "Pantry", TRUE],
-];
-
-
-$quali3 = [		# third bank
-	12 => [ "Patio", TRUE],
-    16 => [ "Gate", TRUE],
-    7 => [ "Lawn", TRUE],
-    8 => [ "Pool", TRUE],
-    25 => [ "Garden", TRUE],
-    24 => [ "Crypt", TRUE],
-    23 => [ "Gazebo", TRUE],
-    18 => [ "Tombs", TRUE],
-  ];
+$disponibili=[	##### Banks of arrays, each will be in a separate <tr>
+	"Sopra"	=>	[
+		2	=>	[TRUE,	"Terrace"],
+		3	=>	[TRUE,	"Bathroom"],
+		4	=>	[TRUE,	"Master BR"],
+		17	=>	[TRUE,	"Closet"],
+		27	=>	[TRUE,	"Hallway"],
+		22	=>	[TRUE,	"Porch"],
+		10	=>	[TRUE,	"Balcony"],
+		9	=>	[TRUE,	"Kids BR"],
+	],
+	"Sotto" =>	[	# second bank
+		11	=>	[TRUE,	"2nd Bath"],
+		5	=>	[TRUE,	"Launderette"],
+		6	=>	[TRUE,	"Kitchen"],
+		13	=>	[TRUE,	"Living"],
+		19	=>	[TRUE,	"Under stairs"],
+		26	=>	[TRUE,	"Entrance door"],
+		21	=>	[TRUE,	"Stairs"],
+		20	=>	[TRUE,	"Pantry"],
+	],
+	"Giardino"	=>	[	# third bank
+		12	=>	[TRUE,	"Patio"],
+	    16	=>	[TRUE,	"Gate"],
+	    7	=>	[TRUE,	"Lawn"],
+	    8	=>	[TRUE,	"Pool"],
+	    25	=>	[TRUE,	"Garden"],
+	    24	=>	[TRUE,	"Crypt"],
+	    23	=>	[TRUE,	"Gazebo"],
+	    18	=>	[TRUE,	"Tombs"],
+	],
+];	# end banks
 
 /*************************************************************************
  *****                                                               *****
@@ -54,13 +59,16 @@ $quali3 = [		# third bank
 
 # External pilots: them have to be executable
 # for Raspbian each will be "sudo /path/to/bin/command.py"
-$accendi	= "/home/www/bin/turnon.py";		# Turn ON
-$spegni		= "/home/www/bin/turnoff.py";		# Turn OFF
-$commuta	= "/home/www/bin/switch.py";		# Invert state
-$stato		= "/home/www/bin/status.py";		# Read state
+$accendi	= "/home/www/bin/gpcomm.py on";		# Turn ON
+$spegni		= "/home/www/bin/gpcomm.py of";		# Turn OFF
+$commuta	= "/home/www/bin/gpcomm.py co";		# Invert state
+$stato		= "/home/www/bin/gpcomm.py st";		# Read state
+# All will write as output True if command had success, False if not
+#  status will report True if relay is on, False if off
 
 # some local vars
 $interpasso	=	200000;		# (uSec) momentary pause between on and off
+$risultato	=	"";			# Will store result from command
 
 /* # Excluded at the moment
 
