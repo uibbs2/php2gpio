@@ -20,12 +20,12 @@ $pagina_subtit = FALSE;	# lead paragraph disabled
 
 $disponibili=[	##### Banks of arrays, each will be in a separate <tr>
 	"Sopra"	=>	[
-		2	=>	[TRUE,	"Terrace"],
-		3	=>	[TRUE,	"Bathroom"],
+		2	=>	[FALSE,	"Terrace"],
+		3	=>	[FALSE,	"Bathroom"],
 		4	=>	[TRUE,	"Master BR"],
 		17	=>	[TRUE,	"Closet"],
-		27	=>	[TRUE,	"Hallway"],
-		22	=>	[TRUE,	"Porch"],
+		27	=>	[FALSE,	"Hallway"],
+		22	=>	[FALSE,	"Porch"],
 		10	=>	[TRUE,	"Balcony"],
 		9	=>	[TRUE,	"Kids BR"],
 	],
