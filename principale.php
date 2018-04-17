@@ -12,7 +12,16 @@ function pulsante($linea) {
 	return shell_exec("$spegni $linea");		# turn off
 } #/pulsante
 
-
+function stato($linea) {
+# Tries to understand if a line is on or off
+	global $stato;
+	# rtrim is mandatory to remove trailing newline
+	if (rtrim(shell_exec("$stato $linea"))=="True"){
+		return True;
+	} else {
+		return False;
+	}
+}
 /*************************************************************************
  * RIGHT NOW WE HAVE JUST THIS
  *************************************************************************/
@@ -101,5 +110,4 @@ if ($_POST['risorsa'] == "ajax") die(json_encode(array("success"=>$risultato)));
 	</script>
 </body>
 </html>
-<?php
-#$fine = microtime(true);$time = $fine - $inizio;print $time;	# durata
+<?php	#$fine = microtime(true);$time = $fine - $inizio;print $time;	# durata
