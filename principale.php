@@ -4,15 +4,51 @@
 ## main functions
 ##
 
-function pulsante($linea) {
-# Activate a relais as momentary
-	global $accendi,$spegni,$interpasso;
-	exec("$accendi $linea");	# turn on
-	usleep($interpasso);		# wait
-	return shell_exec("$spegni $linea");		# turn off
+function accendi($linea){
+	global $accendi;
+	if (rtrim(shell_exec("$accendi $linea"))=="True"){
+		return True;
+	} else {
+		return False;
+	}
+}
+
+function spegni($linea){
+	global $spegni;
+	if (rtrim(shell_exec("$spegni $linea"))=="True"){
+		return True;
+	} else {
+		return False;
+	}
+}
+
+function pulsante($linea){
+	global $interpasso,$singolo;
+	if (!$singolo[$linea][0]) {		# fail if not momentary
+		return False;
+	} else {	##### Right now no test whatsoever
+		accendi($linea);
+		usleep($interpasso);
+		spegni($linea);
+		return True;
+	}
 } #/pulsante
 
-function stato($linea) {
+function interruttore($linea){
+	global $singolo,$commuta;
+	if ($singolo[$linea][0]) {		# fail if momentary
+		return False;
+	} else {	##### Right now no test whatsoever
+		if (rtrim(shell_exec("$commuta $linea"))=="True"){
+			return True;
+		} else {
+			return False;
+		}
+	}
+
+}
+
+function stato($linea) {		# read relay status when not momentary
 # Tries to understand if a line is on or off
 	global $stato;
 	# rtrim is mandatory to remove trailing newline
@@ -22,6 +58,37 @@ function stato($linea) {
 		return False;
 	}
 }
+
+##########################################################################
+function agisci($linea){
+	global $singolo;
+	if($singolo[$linea][0]){	# Momentary
+		return pulsante($linea);
+	} else {
+		return interruttore($linea);
+	}
+}
+
+##########################################################################
+
+## Now will prepare an array, defining which class should have every button
+##
+$singolo = array();
+foreach ($disponibili as $quali) {
+	foreach ($quali as $key => $value) {
+		$singolo[$key] = $value;
+		if (!$value[0]) {		# if is a switch
+			if (stato($key)) {	# its status ON?
+				$singolo[$key]['class'] = "btn-info";
+			} else {
+				$singolo[$key]['class'] = "btn-outline-dark";
+			}
+		} else {				# is a momentary button
+			$singolo[$key]['class'] = "btn-secondary";
+		}
+	}
+}
+
 /*************************************************************************
  * RIGHT NOW WE HAVE JUST THIS
  *************************************************************************/
@@ -29,11 +96,11 @@ function stato($linea) {
 ## has been requested a change via Post? Operate it!
 if ($_POST['quale'] != ""){
 	global $risultato;
-	$risultato = pulsante($_POST['quale']);    # per ora solo pulsante
+	$risultato = agisci($_POST['quale']);    # per ora solo pulsante
 } #endif.quale
 
 ## has been request made via ajax? Stop here
-if ($_POST['risorsa'] == "ajax") die(json_encode(array("success"=>$risultato)));
+if ($_POST['risorsa']=="ajax") die(json_encode(array("success"=>$risultato,"quale"=>$_POST['quale'])));
 
 # Otherwise, give a HTML5 interface
 ?><!doctype html>
@@ -70,7 +137,7 @@ if ($_POST['risorsa'] == "ajax") die(json_encode(array("success"=>$risultato)));
 <?php foreach($disponibili as $nul=>$banco): ?>
 						<td><!-- column <?=$nul ?> -->
 <?php foreach ($banco as $key=>$value): ?>
-							<p><button type="submit" name="quale" value="<?=$key ?>" class="btn btn-secondary btn-sm"><?php echo $value[1] ?></button></p>
+							<p><button type="submit" name="quale" id="B<?=$key ?>" value="<?=$key ?>" class="btn <?=$singolo[$key]['class'] ?> btn-sm"><?=$value[1] ?></button></p>
 <?php endforeach /* $banco as $key=>$value */ ?>
 						</td>
 <?php endforeach /* $disponibili as $nul=>$banco */ ?>
@@ -100,7 +167,9 @@ if ($_POST['risorsa'] == "ajax") die(json_encode(array("success"=>$risultato)));
 				  	// dovrebbe cambiare classe del bottone premuto
 					// console.log(data); // per vedere il risultato risposto dalla pagina
 					data=$.parseJSON(data); // per trasformarlo in json
-					console.log(data.success)
+					console.log(data.success);
+					console.log(data.quale);
+					// $("#B").removeClass("btn").addClass("btn-info");
 					//else
 						//console.log("ko");
 				}); // $.post
